@@ -14,39 +14,39 @@ import { HangmanComponent } from './components/hangman/hangman.component';
 export class AppComponent {
 
   @ViewChild(HangmanComponent)
-  private hangman!:HangmanComponent;
+  private hangman!: HangmanComponent;
 
   private hubConnection?: signalR.HubConnection
 
   isConnected: boolean = false;
-  letter:string = "";
-  wronglyGuessedWord:string = "";
+  letter: string = "";
+  wronglyGuessedWord: string = "";
 
-  gameData:GameData | undefined;
+  gameData: GameData | undefined;
 
-  constructor(){
+  constructor() {
     this.connectToHub();
   }
 
   connectToHub() {
     this.hubConnection = new signalR.HubConnectionBuilder()
-                              .withUrl('http://localhost:5030/Pendu')
-                              .build();
+      .withUrl('http://localhost:5030/Pendu')
+      .build();
 
-      this.hubConnection!.on('GameData', (data:GameData) => {
-        console.log("Data:");
-        console.log(data);
-        this.gameData = data;
-        this.hangman.restart(data.nbWrongGuesses);
-      });
+    this.hubConnection!.on('GameData', (data: GameData) => {
+      console.log("Data:");
+      console.log(data);
+      this.gameData = data;
+      this.hangman.restart(data.nbWrongGuesses);
+    });
 
-      this.hubConnection!.on('Event', (event) => {
-        console.log("Event:");
-        console.log(event);
-        this.applyEvent(event);
-      });
+    this.hubConnection!.on('Event', (event) => {
+      console.log("Event:");
+      console.log(event);
+      this.applyEvent(event);
+    });
 
-      this.hubConnection
+    this.hubConnection
       .start()
       .then(() => {
         console.log("Connected");
@@ -56,23 +56,25 @@ export class AppComponent {
       .catch(err => console.log('Error while starting connection: ' + err))
   }
 
-  startGame(){
+  startGame() {
     this.hubConnection?.invoke("StartGame");
   }
 
-  guessWord(){
+  guessWord() {
     this.hubConnection?.invoke("GuessLetter", this.letter.at(0));
+    if (!this.gameData?.guessedLetters.includes(this.letter)) {
+      this.gameData?.guessedLetters.push(this.letter);
+    }
     this.letter = "";
   }
 
-  canStartNewGame(){
+  canStartNewGame() {
     return this.gameData == null || this.gameData.lost || this.gameData.won;
   }
 
-  async applyEvent(event:any){
-    if(this.gameData)
-    {
-      switch(event.eventType){
+  async applyEvent(event: any) {
+    if (this.gameData) {
+      switch (event.eventType) {
         case "WrongGuess": {
           this.gameData.nbWrongGuesses++;
           this.hangman.showMore();
@@ -88,16 +90,16 @@ export class AppComponent {
         }
       }
 
-      if(event.events){
-        for(let e of event.events){
+      if (event.events) {
+        for (let e of event.events) {
           await this.applyEvent(e);
         }
       }
     }
   }
 
-  setCharAt(str:string, index:number, chr:string) {
-    if(index > str.length-1) return str;
-    return str.substring(0,index) + chr + str.substring(index+1);
-}
+  setCharAt(str: string, index: number, chr: string) {
+    if (index > str.length - 1) return str;
+    return str.substring(0, index) + chr + str.substring(index + 1);
+  }
 }

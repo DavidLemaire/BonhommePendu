@@ -11,6 +11,20 @@ namespace BonhommePendu.Events
         {
             // Conseil: Vous pouvez utiliser gameData.RevealLetter mettre à jour gameData
             // Conseil: Vous pouvez utiliser gameData.HasGuessedTheWord pour savoir si c'est une victoire
+            gameData.RevealLetter(index);
+            if (gameData.HasGuessedTheWord)
+            {
+                WinEvent newEvent = new WinEvent(gameData);
+                if (Events != null)
+                {
+                    Events.Add(newEvent);
+                }
+                else
+                {
+                    Events = new List<GameEvent>();
+                    Events.Add(newEvent);
+                }
+            }
         }
     }
 }
